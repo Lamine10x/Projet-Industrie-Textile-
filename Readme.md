@@ -1,4 +1,4 @@
-# 🧵 J.COCO Atelier Batik – Application mobile de gestion et site vitrine
+# 🧵 J.COCO Atelier Batik – Application mobile de gestion
 
 Projet réalisé dans le cadre du module **Atelier de Génie Logiciel** (domaine n°28 : industrie textile), Licence 3 Génie Logiciel, **Institut Ivoirien de Technologie (IIT)**.
 
@@ -66,31 +66,31 @@ Pour asseoir sa notoriété de « producteur-vendeur », l'entreprise manque de 
 
 # 2. Présentation du projet
 
-> Cette section résume le **cahier des charges** du projet (`Cahier_des_charges_JCOCO.docx`).
-
-## 2.1 Contexte et objectifs
+## 2.1 Contexte et périmètre
 
 Le client ne dispose pas d'ordinateur : la gestion de l'atelier doit se faire entièrement **sur smartphone**. Il souhaite aussi gagner en visibilité et recevoir plus de demandes de collaboration, au-delà de ses collaborations actuelles avec des groupes de dames de l'église.
 
-La solution comprend :
+Le projet comprend deux parties distinctes, étroitement liées :
 
-- une **application mobile Flutter** de gestion, réservée à l'atelier ;
-- un **site web vitrine** public, lié à cette application.
+| Partie | Description |
+| :--- | :--- |
+| **Application mobile de gestion** (Flutter) | Cœur du projet. Réservée à l'équipe de l'atelier, elle fonctionne **hors ligne, sur le téléphone**, sans serveur. |
+| **Site web vitrine** | Site de présentation simple, modifié **à la demande du client**. Il n'est pas alimenté par l'application. Son déploiement est une partie tierce, séparée de l'application, qui y renvoie par un lien. |
 
-**Objectifs :**
+## 2.2 Objectifs
 
 1. Réduire les ruptures de stock (tissu Uniwax, intrants de teinture, pièces finies en 4 yards).
 2. Suivre la production de teinture, en particulier de janvier à juin.
-3. Distinguer les ventes en gros et au détail.
-4. Augmenter la visibilité de l'atelier et faciliter les demandes de collaboration et les réservations d'ateliers.
+3. Enregistrer les ventes en gros et au détail, avec le tarif correspondant.
+4. Augmenter la visibilité de l'atelier grâce à un site vitrine et faciliter les demandes de collaboration.
 
-## 2.2 Besoins exprimés par le client
+## 2.3 Besoins exprimés par le client
 
 | Thème | Besoin |
 | :--- | :--- |
 | Matériel | Pas d'ordinateur portable : solution mobile |
 | Positionnement | Être connu en tant que producteur et vendeur |
-| Visibilité | Plus de visibilité et plus de demandes de collaboration |
+| Visibilité | Plus de visibilité et plus de demandes de collaboration, au-delà des collaborations actuelles |
 | Canaux de vente | Grossistes et vente au détail |
 | Produit phare | Format 4 yards, taille la plus demandée |
 | Fournisseur | Tissu acheté chez Uniwax |
@@ -99,55 +99,78 @@ La solution comprend :
 | Problème principal | Les ruptures de stock |
 | Déploiement | Possibilité de déployer l'application |
 
-> Les modules, rôles et technologies ci-dessous sont des propositions de l'auteur, déjà soumises à la validation du client.
+> Les fonctionnalités, rôles et choix techniques ci-dessous sont des propositions de l'auteur, présentées dans la maquette de l'application.
 
-## 2.3 Fonctionnalités
+## 2.4 Fonctionnalités de l'application mobile
 
-### Application mobile de gestion (Flutter)
+### Accès sécurisé de l'équipe
+- Écran de démarrage, puis connexion par **code PIN à 4 chiffres** et choix du profil (responsable ou artisan).
+- **Inscription d'un nouvel artisan** (nom, WhatsApp, spécialité, PIN), validée par le responsable.
+- **Récupération du PIN** hors ligne : clé de secours ou questions secrètes, avec limite de tentatives.
 
-| Module | Exigences |
+### Stocks et alertes anti-rupture
+- Deux vues : **matières premières** (tissu brut Uniwax, cires, pigments) et **produits finis** (format 4 yards).
+- Seuil d'alerte par article ; état du stock (confortable, seuil bas, rupture).
+- Enregistrement de l'entrée d'un rouleau (métrage en yards, fournisseur), avec scan de QR code.
+- **Alertes de rupture** sur le tableau de bord et notifications sur le téléphone.
+
+### Suivi de l'atelier et de la production
+- **Pipeline en 5 étapes** par lot : `Prépa` → `Cirage` → `Cuves (teinture)` → `Séchage` → `Fini`.
+- Suivi des lots en cours (motif, responsable, commande associée) et passage à l'étape suivante.
+- **État des cuves** (indigo, terracotta, ocre) : en cours, en préparation, disponible.
+- **Haute saison (janvier à juin)** : objectif de production et taux de complétion.
+- Historique des recettes de teinture.
+
+### Ventes et partenaires
+- **Caisse et ventes directes** : choix de la longueur (2, 4 ou 6 yards, rouleau), de la pièce et de la quantité.
+- **Tarif gros et tarif détail**, avec une remise dégressive proposée (à valider avec le client).
+- Enregistrement du mode de paiement : espèces, Wave, Orange Money ou Moov Money.
+- **Décrémentation automatique du stock** à chaque vente.
+- **Commandes et partenaires** : suivi des demandes des structures de mode, avec réponse directe par WhatsApp.
+- Recette du jour, répartition grossistes et détail.
+
+### Tableau de bord
+- Alertes anti-rupture, lots en cours, pièces prêtes, commandes et partenaires, atelier découverte à venir.
+- Actions rapides : nouveau lot, vente rapide, accès à la vitrine.
+
+### Onglet Vitrine
+- Lien du site web, bouton pour le visiter et pour le partager.
+
+## 2.5 Site web vitrine
+
+Site de présentation, modifié à la demande du client. Contenu proposé :
+
+- présentation de l'atelier et de son double statut de producteur et de vendeur ;
+- galerie de photos des réalisations ;
+- information sur les ateliers ;
+- **contact WhatsApp** de J.COCO atelier Batik, utilisé aussi pour les rendez-vous, les commandes en gros et les demandes de collaboration.
+
+## 2.6 Acteurs et droits
+
+| Acteur | Accès |
 | :--- | :--- |
-| **Stocks et alertes** | STK-01 inventaire du tissu brut, des pigments et des cires · STK-02 inventaire des pièces finies par format (priorité 4 yards) · STK-03 notification sous un seuil défini par le client |
-| **Production (teinture)** | PRO-01 suivi de chaque lot : `Tissu reçu` → `Cirage` → `Teinture` → `Séchage` → `Stocké` · PRO-02 vue de planification de la saison janvier-juin |
-| **Ventes et partenaires** | VEN-01 clients par catégorie (grossistes, détail, structures de mode) · VEN-02 tarif de gros et tarif de détail · VEN-03 suivi des commandes et collaborations |
-| **Ateliers et vitrine** | ATE-01 créneaux d'ateliers · ATE-02 validation des rendez-vous · ATE-03 gestion des photos du site · ATE-04 traitement des demandes de collaboration (`Nouvelle` → `En discussion` → `Acceptée` / `Refusée`) |
-| **Tableau de bord** | TDB-01 stocks critiques, ventes par canal, lots en cours, rendez-vous et demandes à traiter |
+| **Responsable de l'atelier** | Accès complet à l'application ; valide l'inscription des artisans |
+| **Artisan** (cuves, cirage, stocks, apprenti) | Accès à l'application selon sa spécialité |
+| **Visiteur / client potentiel / partenaire** | Site vitrine uniquement ; contact par WhatsApp |
 
-### Site web vitrine (public)
+## 2.7 Choix techniques
 
-Le site utilise les mêmes données que l'application : une photo ajoutée ou un créneau ouvert depuis le téléphone apparaît directement sur le site.
+- **Application :** Flutter, Android en priorité.
+- **Données :** stockage local (SQLite ou Hive), sans serveur.
+- **Notifications :** alertes de rupture locales, calculées sur le téléphone.
+- **Sécurité :** PIN et clés chiffrés dans l'espace sécurisé du téléphone (Keystore / Keychain).
+- **Sauvegarde :** export manuel des données (à prévoir, pour éviter la perte en cas de téléphone perdu ou cassé).
+- **Paiements :** le mode de paiement est enregistré, sans intégration des services de mobile money.
+- **Site vitrine :** site simple, hébergé séparément (nom de domaine à définir).
 
-- **SIT-01** : prendre rendez-vous pour un atelier (créneau, nom, nombre de participants, contact).
-- **SIT-02** : accéder au contact WhatsApp de J.COCO atelier Batik.
-- **SIT-03** : admirer les réalisations dans une galerie de photos.
-- **SIT-04** : envoyer une demande de collaboration (structure de mode, boutique, institution, grossiste).
+## 2.8 Livrables
 
-## 2.4 Acteurs et droits
-
-| Acteur | Application de gestion | Site vitrine |
-| :--- | :---: | :---: |
-| Responsable de l'atelier (propriétaire) | Accès complet | Gère le contenu |
-| Collaborateur de l'atelier (optionnel) | Stocks et production | Lecture |
-| Visiteur, client potentiel ou partenaire | Aucun accès | Consulte, réserve, envoie une demande |
-
-## 2.5 Choix techniques
-
-- **Application de gestion :** Flutter (Android en priorité, iOS possible).
-- **Site vitrine :** site web responsive (Flutter Web ou front web classique), connecté à la même API.
-- **Backend :** API REST (Laravel ou Node.js) avec MySQL ou PostgreSQL, ou alternative Firebase.
-- **Notifications :** alertes de rupture de stock sur le téléphone.
-- **Connectivité :** à discuter avec le client (connexion limitée possible à l'atelier).
-- **Déploiement :** API et site sur un VPS ou un service cloud ; application distribuée en APK.
-- **Sécurité :** authentification et accès séparés par rôle.
-
-## 2.6 Livrables
-
-- [x] Cahier des charges
-- [ ] Recette des besoins validée par le client
-- [ ] Diagramme de cas d'utilisation (UML)
-- [ ] Maquettes de l'écran (application)
+- [x] Cahier des charges (v1.0, à mettre à jour en v1.1)
+- [x] Maquette de l'application (Google Stitch)
+- [x] Diagrammes  (UML)
+- [x] Maqquette Figma
 - [ ] Prototype de l'application Flutter
-- [ ] Prototype du site vitrine
+- [ ] Site vitrine
 
 ---
 
