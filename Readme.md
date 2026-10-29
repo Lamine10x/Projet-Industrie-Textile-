@@ -174,6 +174,7 @@ Site de présentation, modifié à la demande du client. Contenu proposé :
 
 ---
 
-## Auteur
+LIEN DE LA MAQUETTE FIGMA:
+(https://www.figma.com/design/iIXCN4j3ygmRA6B2eDSrCj/Dynamic-J-COCO-APP?m=auto&t=QSytUqpfnUrbucIh-6)
 
 **Touré Lamine** – Licence 3 Génie Logiciel, Institut Ivoirien de Technologie (IIT)
