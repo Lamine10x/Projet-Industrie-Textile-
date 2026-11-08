@@ -10,6 +10,11 @@ Projet réalisé dans le cadre du module **Atelier de Génie Logiciel** (domaine
 
 1. [Présentation de l'entreprise](#1-présentation-de-lentreprise)
 2. [Présentation du projet](#2-présentation-du-projet)
+3. [Modélisation & Diagrammes UML](#3-modélisation--diagrammes-uml)
+   - [3.1 Diagramme des cas d'utilisation](#31-diagramme-des-cas-dutilisation)
+   - [3.2 Diagramme de classes métier](#32-diagramme-de-classes-métier)
+   - [3.3 Diagramme d'activité global](#33-diagramme-dactivité-global)
+   - [3.4 Diagrammes de séquence](#34-diagrammes-de-séquence)
 
 ---
 
@@ -27,7 +32,7 @@ Projet réalisé dans le cadre du module **Atelier de Génie Logiciel** (domaine
 
 ## 1.2 Vision et positionnement
 
-J.COCO se distingue par une double identité sur le marché ivoirien. Le promoteur souhaite que sa structure soit pleinement reconnue à la fois comme :
+J.COCO se distingue par une double identité sur le marché artisanal à Bassam. Le promoteur souhaite que sa structure soit pleinement reconnue à la fois comme :
 
 1. **Un producteur** : un atelier technique maîtrisant la teinture artisanale et semi-industrielle (technique du batik).
 2. **Un vendeur** : un distributeur textile capable de fournir le marché local et les créateurs de mode.
@@ -171,6 +176,283 @@ Site de présentation, modifié à la demande du client. Contenu proposé :
 - [x] Maqquette Figma
 - [ ] Prototype de l'application Flutter
 - [ ] Site vitrine
+
+---
+
+# 3. Modélisation & Diagrammes UML
+
+Les diagrammes ci-dessous modélisent fidèlement l'architecture technique, les cas d'utilisation et les flux opérationnels de l'application mobile **J.COCO Atelier Batik**.
+
+---
+
+## 3.1 Diagramme des cas d'utilisation
+
+```mermaid
+flowchart LR
+    Gerant(("👤 Gérant"))
+
+    subgraph System["Système J.COCO Atelier"]
+        subgraph P1["Gestion de la production & atelier"]
+            UC1["Créer un lot de batik"]
+            UC2["Suivre les étapes de teinture"]
+            UC3["Mettre à jour l'état de production"]
+        end
+
+        subgraph P2["Gestion des stocks & anti-rupture"]
+            UC4["Consulter l'état des stocks"]
+            UC5["Configurer les seuils d'alerte"]
+            UC6["Saisir un réapprovisionnement"]
+            UC7["Déclencher alerte anti-rupture"]
+        end
+
+        subgraph P3["Caisse & ventes directes"]
+            UC8["Effectuer une vente POS"]
+            UC9["Appliquer une remise"]
+            UC10["Enregistrer le paiement (Espèces / Mobile Money)"]
+            UC11["Déduire du stock"]
+        end
+
+        subgraph P4["Suivi des artisans"]
+            UC12["Consulter la présence des artisans via code PIN"]
+        end
+    end
+
+    Gerant --- UC1
+    Gerant --- UC2
+    Gerant --- UC3
+    Gerant --- UC4
+    Gerant --- UC5
+    Gerant --- UC6
+    Gerant --- UC8
+    Gerant --- UC12
+
+    UC7 -.->|«extend»| UC4
+    UC9 -.->|«extend»| UC8
+    UC8 -.->|«include»| UC10
+    UC8 -.->|«include»| UC11
+```
+
+---
+
+## 3.2 Diagramme de classes métier
+
+```mermaid
+classDiagram
+    direction TB
+
+    class Gerant {
+        -int id
+        -String nom
+        -String pinCode
+        +seConnecter(pin: String) boolean
+        +seDeconnecter() void
+        +changerPin(ancien: String, nouveau: String) boolean
+        +creerLot(motif: String) LotBatik
+        +enregistrerVente() Vente
+    }
+
+    class LotBatik {
+        -String codeLot
+        -String motif
+        -EtapeProduction etapeActuelle
+        -Date dateDebut
+        +passerEtapeSuivante() void
+    }
+
+    class Matiere {
+        -int idMatiere
+        -String nom
+        -double quantiteEnStock
+        -double seuilAlerte
+        +estEnRupture() boolean
+    }
+
+    class AlerteStock {
+        -int idAlerte
+        -NiveauAlerte niveauAlerte
+        -Date dateAlerte
+    }
+
+    class Vente {
+        -int idVente
+        -Date dateVente
+        -double montantTotal
+        -ModePaiement modePaiement
+        +validerPaiement() boolean
+    }
+
+    class LigneVente {
+        -int quantite
+        -double prixUnitaire
+        +calculerSousTotal() double
+    }
+
+    class EtapeProduction {
+        <<enumeration>>
+        PREPARATION
+        CIRAGE
+        TEINTURE
+        RINCAGE
+        SECHAGE
+        TERMINE
+    }
+
+    class ModePaiement {
+        <<enumeration>>
+        ESPECES
+        WAVE
+        ORANGE_MONEY
+        MOOV_MONEY
+    }
+
+    class NiveauAlerte {
+        <<enumeration>>
+        BAS
+        CRITIQUE
+        RUPTURE
+    }
+
+    Gerant "1" --> "*" LotBatik : supervise
+    Gerant "1" --> "*" Vente : enregistre
+    LotBatik "*" --> "1..*" Matiere : utilise
+    Vente "1" *-- "1..*" LigneVente : contient
+    Matiere "1" --> "*" AlerteStock : déclenche
+
+    LotBatik ..> EtapeProduction
+    Vente ..> ModePaiement
+    AlerteStock ..> NiveauAlerte
+```
+
+---
+
+## 3.3 Diagramme d'activité global
+
+```mermaid
+flowchart TD
+    Start((● Début)) --> A1["Saisir le code PIN (4 chiffres)"]
+    A1 --> A2{"PIN correct ?"}
+    A2 -- Non --> A1
+    A2 -- Oui --> A3["Afficher le tableau de bord mobile"]
+
+    subgraph Production["Production & Atelier"]
+        A3 --> A4["Créer un lot de batik (tissu, motif, métrage)"]
+        A4 --> A5{"Stock tissu Uniwax suffisant ?"}
+        A5 -- Non --> A6["Saisir réapprovisionnement"]
+        A6 --> A4
+        A5 -- Oui --> A7["Déduire tissu et initialiser lot"]
+        A7 --> A8["Étapes : Prépa ➔ Cirage ➔ Teinture Cuves ➔ Déparaffinage ➔ Séchage"]
+        A8 --> A9{"Dernière étape terminée ?"}
+        A9 -- Non --> A8
+        A9 -- Oui --> A10["Ajouter les pièces finies (4 yards) au stock"]
+    end
+
+    subgraph Vente["Caisse & Vente POS"]
+        A10 --> A11["Enregistrer une vente (sélection articles)"]
+        A11 --> A12{"Remise applicable ?"}
+        A12 -- Oui --> A13["Appliquer remise dégressive (gros / détail)"]
+        A12 -- Non --> A14["Sélectionner mode de règlement"]
+        A13 --> A14
+        A14 --> A15{"Mode de paiement ?"}
+        A15 -- Mobile Money --> A16["Validation Wave / Orange / Moov Money"]
+        A15 -- Espèces --> A17["Encaissement Cash FCFA & rendu monnaie"]
+        A16 --> A18["Enregistrer vente & déduire stock"]
+        A17 --> A18
+        A18 --> A19["Imprimer / afficher reçu client"]
+    end
+
+    subgraph AntiRupture["Contrôle Anti-Rupture"]
+        A19 --> A20{"Stock restant ≤ seuil d'alerte ?"}
+        A20 -- Oui --> A21["🔔 Déclencher alerte anti-rupture & notification"]
+        A20 -- Non --> EndNode((◎ Fin))
+        A21 --> EndNode
+    end
+```
+
+---
+
+## 3.4 Diagrammes de séquence
+
+### 3.4.1 Caisse & Ventes directes (POS)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor G as Gérant / Artisan
+    participant POS as Terminal Caisse J.COCO
+    participant V as Module Vente
+    participant S as Gestion des Stocks
+
+    G->>POS: Sélectionne pagnes / articles (longueur 4 yards)
+    POS->>V: Ajoute au panier & calcule montant
+    opt Remise accordée
+        G->>POS: Applique remise (client fidèle / gros)
+        POS->>V: Recalcule total net
+    end
+    G->>POS: Valide et choisit paiement (Wave / Orange / Espèces)
+    POS->>V: Enregistre la transaction
+    V->>S: Décrémente automatiquement les quantités
+    S-->>POS: Stock mis à jour
+    POS-->>G: Reçu de vente généré & notification visuelle
+```
+
+### 3.4.2 Pointage des artisans par code PIN
+```mermaid
+sequenceDiagram
+    autonumber
+    actor A as Artisan
+    participant P as Module Pointage PIN
+    participant BD as Registre Présence
+    actor G as Gérant
+
+    A->>P: Sélectionne son profil & saisit son PIN (4 chiffres)
+    P->>P: Vérifie validité du code PIN
+    alt PIN valide
+        P->>BD: Enregistre heure arrivée / statut (Présent / Pause)
+        BD-->>P: Confirmation enregistrement
+        P-->>A: Toast de confirmation ("Bienvenue !")
+    else PIN erroné
+        P-->>A: Alerte code incorrect (tentatives limitées)
+        opt Perte de PIN
+            A->>G: Demande réinitialisation par le Gérant
+        end
+    end
+```
+
+### 3.4.3 Suivi atelier & cuves de teinture
+```mermaid
+sequenceDiagram
+    autonumber
+    actor A as Teinturier
+    participant AT as Module Atelier
+    participant C as Cuves (Indigo / Ocre / Savane)
+    participant L as Lot de Batik
+
+    A->>AT: Consulte planning et cuves disponibles
+    AT->>C: Vérifie niveau de bain (%) et température
+    C-->>AT: Retour état (Optimal / En préparation)
+    A->>AT: Démarre immersion lot #BTK-2026-xxx
+    AT->>L: Passe statut à "En cours de teinture"
+    A->>AT: Valide temps de bain & oxydation
+    AT->>L: Incrémente étape (➔ Déparaffinage / Lavage)
+```
+
+### 3.4.4 Gestion des stocks & alertes anti-rupture
+```mermaid
+sequenceDiagram
+    autonumber
+    participant S as Module Stocks
+    participant M as Matière (Coton Uniwax / Cire / Pigments)
+    participant N as Système de Notification
+    actor G as Gérant
+
+    S->>M: Évalue quantité restante vs seuil critique
+    alt Quantité ≤ Seuil Alerte
+        M->>N: Déclenche Alerte Anti-Rupture
+        N-->>G: Notification mobile & badge rouge dashboard
+        G->>S: Saisit bon de commande réapprovisionnement Uniwax
+        S->>M: Incrémente stock réceptionné
+        M-->>N: Réinitialise alerte (statut nominal)
+    end
+```
 
 ---
 
