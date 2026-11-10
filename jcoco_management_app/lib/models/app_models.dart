@@ -1,5 +1,23 @@
 import 'package:flutter/material.dart';
 
+class CompteGerant {
+  String nom;
+  String telephone;
+  String motDePasse;
+  String pinCode;
+  String questionSecrete;
+  String reponseSecrete;
+
+  CompteGerant({
+    required this.nom,
+    this.telephone = '',
+    required this.motDePasse,
+    required this.pinCode,
+    required this.questionSecrete,
+    required this.reponseSecrete,
+  });
+}
+
 class MatiereStock {
   final String id;
   final String nom;
