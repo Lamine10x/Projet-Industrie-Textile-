@@ -174,7 +174,7 @@ Site de présentation, modifié à la demande du client. Contenu proposé :
 - [x] Maquette de l'application (Google Stitch)
 - [x] Diagrammes  (UML)
 - [x] Maqquette Figma
-- [ ] Prototype de l'application Flutter
+- [x] Prototype de l'application Flutter (JCOCO Management APP)
 - [ ] Site vitrine
 
 ---
