@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
 import '../services/app_state.dart';
+import 'auth_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -131,24 +132,27 @@ class _MainShellState extends State<MainShell> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.secondaryFixed,
-                            width: 1.5,
+                      GestureDetector(
+                        onTap: () => _showProfilMenu(),
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: AppColors.secondary,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColors.secondaryFixed,
+                              width: 1.5,
+                            ),
                           ),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            'MJ',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 11,
+                          child: const Center(
+                            child: Text(
+                              'MJ',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                              ),
                             ),
                           ),
                         ),
@@ -657,7 +661,7 @@ class _MainShellState extends State<MainShell> {
           children: [
             Expanded(
               child: _buildThumbAction(Icons.playlist_add, '+ Nouveau lot', AppColors.primary, () {
-                _state.setActiveTab(2);
+                _showNouveauLotModal();
               }),
             ),
             const SizedBox(width: 8),
@@ -1396,35 +1400,142 @@ class _MainShellState extends State<MainShell> {
   void _showPaiementModal() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Modal de Règlement Caisse', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary)),
-              const SizedBox(height: 14),
-              ListTile(
-                leading: const Icon(Icons.money, color: AppColors.emeraldSuccess),
-                title: const Text('Espèces (Cash FCFA)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                onTap: () {
-                  Navigator.pop(context);
-                  _state.viderPanier();
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Paiement espèces enregistré. Reçu émis !')));
-                },
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx2, setModalState) {
+            String modePaiement = 'especes';
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Règlement Caisse', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.primary)),
+                      IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close)),
+                    ],
+                  ),
+                  const Divider(),
+                  // Récap panier
+                  ..._state.panier.map((ligne) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(child: Text('${ligne.piece.nom} × ${ligne.quantite}', style: const TextStyle(fontSize: 12, color: AppColors.onSurface), overflow: TextOverflow.ellipsis)),
+                        Text('${ligne.total} FCFA', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                      ],
+                    ),
+                  )),
+                  const Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('TOTAL À PAYER', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                      Text('${_state.totalCaisse} FCFA', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.secondary)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('MODE DE PAIEMENT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.8, color: AppColors.onSurfaceVariant)),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setModalState(() => modePaiement = 'especes'),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: modePaiement == 'especes' ? AppColors.emeraldSuccess : AppColors.surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: modePaiement == 'especes' ? AppColors.emeraldSuccess : Colors.transparent, width: 2),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(Icons.money, color: modePaiement == 'especes' ? Colors.white : AppColors.onSurfaceVariant, size: 22),
+                                const SizedBox(height: 4),
+                                Text('Espèces', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: modePaiement == 'especes' ? Colors.white : AppColors.onSurfaceVariant)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setModalState(() => modePaiement = 'wave'),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: modePaiement == 'wave' ? AppColors.secondary : AppColors.surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: modePaiement == 'wave' ? AppColors.secondary : Colors.transparent, width: 2),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(Icons.phone_android, color: modePaiement == 'wave' ? Colors.white : AppColors.onSurfaceVariant, size: 22),
+                                const SizedBox(height: 4),
+                                Text('Wave / Orange', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: modePaiement == 'wave' ? Colors.white : AppColors.onSurfaceVariant)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setModalState(() => modePaiement = 'moov'),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: modePaiement == 'moov' ? AppColors.primary : AppColors.surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: modePaiement == 'moov' ? AppColors.primary : Colors.transparent, width: 2),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(Icons.wifi, color: modePaiement == 'moov' ? Colors.white : AppColors.onSurfaceVariant, size: 22),
+                                const SizedBox(height: 4),
+                                Text('Moov Money', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: modePaiement == 'moov' ? Colors.white : AppColors.onSurfaceVariant)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.secondary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () {
+                        final panierSnapshot = List.from(_state.panier);
+                        final totalSnapshot = _state.totalCaisse;
+                        Navigator.pop(ctx);
+                        _state.viderPanier();
+                        _showTicketCaisse(panierSnapshot, totalSnapshot, modePaiement);
+                      },
+                      icon: const Icon(Icons.check_circle, size: 18),
+                      label: const Text('VALIDER ET ÉMETTRE LE REÇU', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    ),
+                  ),
+                ],
               ),
-              ListTile(
-                leading: const Icon(Icons.phone_android, color: AppColors.secondary),
-                title: const Text('Mobile Money (Wave / Orange / Moov)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                onTap: () {
-                  Navigator.pop(context);
-                  _state.viderPanier();
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Paiement Mobile Money validé !')));
-                },
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -1512,6 +1623,513 @@ class _MainShellState extends State<MainShell> {
           ),
         ),
       ],
+    );
+  }
+
+  // ==========================================
+  // MENU PROFIL & DÉCONNEXION
+  // ==========================================
+  void _showProfilMenu() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Poignée
+              Container(
+                width: 40, height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+              ),
+              // Avatar & infos
+              Row(
+                children: [
+                  Container(
+                    width: 54, height: 54,
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.secondaryFixed, width: 2),
+                    ),
+                    child: const Center(
+                      child: Text('MJ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Maître Jean Kouadio', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.primary)),
+                      const Text('Gérant · Atelier J.COCO Bassam', style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.emeraldSuccess.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text('● Session Active', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.emeraldSuccess)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              const Divider(),
+              ListTile(
+                leading: Container(
+                  width: 36, height: 36,
+                  decoration: BoxDecoration(color: AppColors.surfaceContainerHigh, borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.person_outline, color: AppColors.primary, size: 20),
+                ),
+                title: const Text('Mon Profil', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                subtitle: const Text('+225 07 88 44 22 10', style: TextStyle(fontSize: 11)),
+                trailing: const Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profil Maître Jean Kouadio')));
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  width: 36, height: 36,
+                  decoration: BoxDecoration(color: AppColors.surfaceContainerHigh, borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.lock_outline, color: AppColors.primary, size: 20),
+                ),
+                title: const Text('Changer le Code PIN', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                trailing: const Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Modification du PIN...')));
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  width: 36, height: 36,
+                  decoration: BoxDecoration(color: AppColors.errorContainer, borderRadius: BorderRadius.circular(10)),
+                  child: const Icon(Icons.logout, color: AppColors.error, size: 20),
+                ),
+                title: const Text('Se Déconnecter', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.error)),
+                subtitle: const Text("Fermer la session de l'atelier", style: TextStyle(fontSize: 11)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _confirmerDeconnexion();
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _confirmerDeconnexion() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text("Fermer l'Atelier ?", style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.primary)),
+        content: const Text(
+          'Vous allez fermer la session de Maître Jean.\nToutes les données non sauvegardées seront perdues.',
+          style: TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Annuler', style: TextStyle(color: AppColors.onSurfaceVariant)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const AuthScreen()),
+                (route) => false,
+              );
+            },
+            child: const Text('Se Déconnecter', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // MODALE NOUVEAU LOT DE BATIK
+  // ==========================================
+  void _showNouveauLotModal() {
+    final motifs = ['Liane de Bassam', 'Géométrique Kente', 'Soleil Sassandra', 'Écorce & Cire', 'Prestige Royal', 'Dégradé Savane'];
+    final artisans = ['Kouamé Brou · Chef teinturier', 'Awa Diallo · Tisserande', 'Yao Kouassi · Cirage cire', 'Fatou Koné · Finition'];
+    final cuves = ['Cuve #1 · Indigo Végétal (85%)', 'Cuve #2 · Ocre Latérite (42%)', 'Cuve #3 · Vert Savane (92%)'];
+
+    String? motifSelectionne;
+    String? artisanSelectionne;
+    String? cuveSelectionnee;
+    final longueurController = TextEditingController(text: '4');
+    final formKey = GlobalKey<FormState>();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx2, setModalState) {
+            return Padding(
+              padding: EdgeInsets.fromLTRB(20, 8, 20, MediaQuery.of(ctx2).viewInsets.bottom + 24),
+              child: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40, height: 4,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 36, height: 36,
+                                decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(10)),
+                                child: const Icon(Icons.playlist_add, color: Colors.white, size: 18),
+                              ),
+                              const SizedBox(width: 10),
+                              const Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('ATELIER J.COCO', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.secondary, letterSpacing: 0.6)),
+                                  Text('Nouveau Lot Batik', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.primary)),
+                                ],
+                              ),
+                            ],
+                          ),
+                          IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close)),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('MOTIF', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.6, color: AppColors.onSurfaceVariant)),
+                      const SizedBox(height: 6),
+                      DropdownButtonFormField<String>(
+                        value: motifSelectionne,
+                        decoration: InputDecoration(
+                          hintText: 'Choisir un motif batik...',
+                          prefixIcon: const Icon(Icons.palette_outlined, size: 18),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        ),
+                        items: motifs.map((m) => DropdownMenuItem(value: m, child: Text(m, style: const TextStyle(fontSize: 13)))).toList(),
+                        onChanged: (v) => setModalState(() => motifSelectionne = v),
+                        validator: (v) => v == null ? 'Sélectionnez un motif' : null,
+                      ),
+                      const SizedBox(height: 14),
+                      const Text('LONGUEUR (YARDS)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.6, color: AppColors.onSurfaceVariant)),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: longueurController,
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                prefixIcon: const Icon(Icons.straighten, size: 18),
+                                suffixText: 'yards',
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              ),
+                              validator: (v) => (v == null || v.isEmpty) ? 'Requis' : null,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ...['4', '6', '8'].map((y) => GestureDetector(
+                            onTap: () => setModalState(() => longueurController.text = y),
+                            child: Container(
+                              margin: const EdgeInsets.only(left: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: longueurController.text == y ? AppColors.secondary : AppColors.surfaceContainerHigh,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text('$y Y', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: longueurController.text == y ? Colors.white : AppColors.onSurfaceVariant)),
+                            ),
+                          )),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      const Text('ARTISAN ASSIGNÉ', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.6, color: AppColors.onSurfaceVariant)),
+                      const SizedBox(height: 6),
+                      DropdownButtonFormField<String>(
+                        value: artisanSelectionne,
+                        decoration: InputDecoration(
+                          hintText: 'Assigner un artisan...',
+                          prefixIcon: const Icon(Icons.person_outline, size: 18),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        ),
+                        items: artisans.map((a) => DropdownMenuItem(value: a, child: Text(a, style: const TextStyle(fontSize: 13)))).toList(),
+                        onChanged: (v) => setModalState(() => artisanSelectionne = v),
+                        validator: (v) => v == null ? 'Assignez un artisan' : null,
+                      ),
+                      const SizedBox(height: 14),
+                      const Text("CUVE D'IMMERSION", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.6, color: AppColors.onSurfaceVariant)),
+                      const SizedBox(height: 6),
+                      DropdownButtonFormField<String>(
+                        value: cuveSelectionnee,
+                        decoration: InputDecoration(
+                          hintText: 'Sélectionner la cuve...',
+                          prefixIcon: const Icon(Icons.water_drop_outlined, size: 18),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        ),
+                        items: cuves.map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 12)))).toList(),
+                        onChanged: (v) => setModalState(() => cuveSelectionnee = v),
+                        validator: (v) => v == null ? 'Choisissez une cuve' : null,
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          onPressed: () {
+                            if (formKey.currentState!.validate()) {
+                              final motif = motifSelectionne!;
+                              final longueur = longueurController.text;
+                              final artisan = artisanSelectionne!;
+                              Navigator.pop(ctx);
+                              _state.setActiveTab(2);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('✅ Lot "$motif" ($longueur yards) lancé par $artisan !'),
+                                  backgroundColor: AppColors.primary,
+                                  duration: const Duration(seconds: 3),
+                                ),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.rocket_launch, size: 18),
+                          label: const Text('LANCER LA PRODUCTION', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ==========================================
+  // TICKET DE CAISSE NUMÉRIQUE
+  // ==========================================
+  void _showTicketCaisse(List<dynamic> panier, int total, String modePaiement) {
+    final now = DateTime.now();
+    final dateStr = '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
+    final heureStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    final modeLabel = modePaiement == 'especes' ? 'Espèces (Cash)' : modePaiement == 'wave' ? 'Wave / Orange Money' : 'Moov Money';
+    final numRecu = 'JC-${now.millisecondsSinceEpoch.toString().substring(7)}';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (ctx2, scrollCtrl) {
+            return SingleChildScrollView(
+              controller: scrollCtrl,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 8, 0, 32),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 40, height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Reçu de Vente', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.primary)),
+                          IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFFBF4),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+                        ),
+                        child: Column(
+                          children: [
+                            // En-tête ticket (fond primary)
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(20),
+                              decoration: const BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+                              ),
+                              child: Column(
+                                children: [
+                                  const Text('★ J.COCO ATELIER BATIK ★', style: TextStyle(color: AppColors.secondaryFixed, fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 1.0)),
+                                  const SizedBox(height: 2),
+                                  const Text("Grand-Bassam, Côte d'Ivoire", style: TextStyle(color: Colors.white70, fontSize: 11)),
+                                  const Text('Tél : +225 07 88 44 22 10', style: TextStyle(color: Colors.white60, fontSize: 10)),
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text('N° $numRecu', style: const TextStyle(color: AppColors.primaryFixedDim, fontSize: 10, fontWeight: FontWeight.bold)),
+                                      Text('$dateStr  $heureStr', style: const TextStyle(color: AppColors.primaryFixedDim, fontSize: 10)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Découpe zigzag simulée
+                            Row(
+                              children: List.generate(20, (i) => Expanded(
+                                child: Container(height: 6, color: i.isEven ? const Color(0xFFFFFBF4) : AppColors.primary),
+                              )),
+                            ),
+                            // Corps du ticket
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('ARTICLES', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.8, color: AppColors.onSurfaceVariant)),
+                                  const SizedBox(height: 8),
+                                  const Divider(height: 1),
+                                  const SizedBox(height: 8),
+                                  ...panier.map((ligne) => Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 4),
+                                    child: Row(
+                                      children: [
+                                        Expanded(flex: 3, child: Text(ligne.piece.nom, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primary), overflow: TextOverflow.ellipsis)),
+                                        Expanded(flex: 1, child: Text('× ${ligne.quantite}', textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant))),
+                                        Expanded(flex: 2, child: Text('${ligne.total} F', textAlign: TextAlign.right, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary))),
+                                      ],
+                                    ),
+                                  )),
+                                  const SizedBox(height: 8),
+                                  const Divider(height: 1, color: Colors.black26),
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text('TOTAL PAYÉ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: AppColors.primary)),
+                                      Text('$total FCFA', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.secondary)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text('Mode de paiement', style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant)),
+                                      Text(modeLabel, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const Center(child: Text('- - - - - - - - - - - - - - -', style: TextStyle(color: Colors.grey, letterSpacing: 2, fontSize: 10))),
+                                  const SizedBox(height: 8),
+                                  const Center(
+                                    child: Text(
+                                      'Merci pour votre confiance !\nArtisanat authentique de Grand-Bassam',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant, height: 1.5),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Center(
+                                    child: Text('www.jcoco-batik.ci', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.secondary)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.secondary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('📲 Partage WhatsApp en cours...')));
+                              },
+                              icon: const Icon(Icons.share, size: 16),
+                              label: const Text('WhatsApp', style: TextStyle(fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: AppColors.primary, width: 1.5),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              onPressed: () => Navigator.pop(ctx),
+                              icon: const Icon(Icons.add_shopping_cart, size: 16, color: AppColors.primary),
+                              label: const Text('Nouvelle Vente', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
